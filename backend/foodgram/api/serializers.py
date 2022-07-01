@@ -20,24 +20,24 @@ from users.models import User
     #     return value
 
 
-# class UserSerializer(serializers.ModelSerializer):
-#     username = serializers.RegexField(
-#         r'^[\w.@+-]+$',
-#         max_length=150,
-#         required=True
-#     )
-#
-#     class Meta:
-#         fields = ['username', 'email', 'first_name',
-#                   'last_name', 'password']
-#         model = User
-#         lookup_field = 'username'
-#         extra_kwargs = {
-#             'email': {'required': True},
-#             'first_name': {'required': True},
-#             'last_name': {'required': True},
-#             'password': {'required': True},
-#         }
+class UserSerializer(serializers.ModelSerializer):
+    username = serializers.RegexField(
+        r'^[\w.@+-]+$',
+        max_length=150,
+        required=True
+    )
+
+    class Meta:
+        fields = ['username', 'email', 'first_name',
+                  'last_name', 'password']
+        model = User
+        lookup_field = 'username'
+        extra_kwargs = {
+            'email': {'required': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'password': {'required': True},
+        }
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -50,9 +50,11 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'name', 'color', 'slug']
+        read_only_fields = ['id', 'name', 'color', 'slug']
 
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ['id', 'name', 'value', 'measurement_unit']
+        read_only_fields = ['id', 'name', 'value', 'measurement_unit']
