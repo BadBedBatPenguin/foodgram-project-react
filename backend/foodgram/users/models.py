@@ -19,6 +19,7 @@ ROLE_CHOICES = [
 
 
 class User(AbstractUser):
+    """User custom model"""
     email = models.EmailField(
         'Электронная почта',
         unique=True,
@@ -68,18 +69,16 @@ class User(AbstractUser):
 
 
 class Follow(models.Model):
+    """Follow model"""
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         related_name='follower',
         verbose_name='Подписчик',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        blank=True,
         null=True,
         related_name='following',
         verbose_name='Автор',

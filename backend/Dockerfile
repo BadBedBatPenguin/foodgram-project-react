@@ -6,4 +6,5 @@ RUN pip3 install --upgrade pip
 RUN pip3 install -r /app/requirements.txt --no-cache-dir
 COPY foodgram/ /app
 WORKDIR /app
-CMD ["python3", "manage.py", "runserver", "0:8000"]
+RUN python3 manage.py migrate
+CMD ["gunicorn", "foodgram.wsgi:application", "--bind", "0.0.0.0:8000" ]

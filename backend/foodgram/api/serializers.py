@@ -28,13 +28,14 @@ class UserSerializer(serializers.ModelSerializer):
         max_length=150,
         required=True
     )
-    is_subscribed = serializers.SerializerMethodField()
+    # is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
+        # fields = ['username', 'email', 'id', 'first_name',
+        #           'last_name', 'is_subscribed']
         fields = ['username', 'email', 'id', 'first_name',
-                  'last_name', 'is_subscribed']
+                  'last_name']
         model = User
-        lookup_field = 'username'
         extra_kwargs = {
             'email': {'required': True},
             'first_name': {'required': True},
@@ -43,9 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
         def get_is_subscribed(self, obj):
-            author_id = self.context['view'].kwargs.get('user_id')
-            author = get_object_or_404(User, id=author_id)
-            return Follow.filter(user=self.context['request'].user, author=author).exists()
+            return Follow.objects.filter(user=self.context['request'].user, author=obj.id).exists()
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -89,7 +88,8 @@ class FollowSerializer(serializers.ModelSerializer):
             UniqueTogetherValidator(
                 queryset=Follow.objects.all(),
                 fields=('user', 'author',)
-            ),)
+            ),
+        )
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
@@ -100,7 +100,7 @@ class FollowSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context('request').user
         if user == data['author']:
-            raise serializers.ValidationError('на себя нельзья подписаться')
+            raise serializers.ValidationError('на себя нельзя подписаться')
         return data
 
     def get_recipes_count(self, obj):
