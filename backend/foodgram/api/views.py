@@ -12,7 +12,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     # permission_classes = (AdminOnly,)
-    lookup_field = 'username'
+    lookup_field = 'id'
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)

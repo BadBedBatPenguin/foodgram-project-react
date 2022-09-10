@@ -6,33 +6,25 @@ from recipes.models import Recipe, Tag, Ingredient
 from users.models import Follow, User
 
 
-# class CreateUserSerializer(serializers.Serializer):
-#     username = serializers.RegexField(
-#         r'^[\w.@+-]+$',
-#         max_length=150,
-#         required=True
-#     )
-#     email = serializers.EmailField(required=True, max_length=254)
-
-    # def validate_username(self, value):
-    #     if value == 'me':
-    #         raise serializers.ValidationError(
-    #             'Имя пользователя "me" не допустимо!'
-    #         )
-    #     return value
-
-
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
         r'^[\w.@+-]+$',
         max_length=150,
         required=True
     )
-    is_subscribed = serializers.SerializerMethodField()
+    # is_subscribed = serializers.SerializerMethodField()
+    #
+    # def get_is_subscribed(self, obj):
+    #     author_id = self.context['view'].kwargs.get('user_id')
+    #     author = get_object_or_404(User, id=author_id)
+    #     return Follow.filter(user=self.context['request'].user, author=author).exists()
+
 
     class Meta:
         fields = ['username', 'email', 'id', 'first_name',
-                  'last_name', 'is_subscribed']
+                  # 'last_name', 'is_subscribed']
+                  'last_name']
+
         model = User
         lookup_field = 'username'
         extra_kwargs = {
@@ -42,10 +34,15 @@ class UserSerializer(serializers.ModelSerializer):
             'password': {'required': True},
         }
 
-        def get_is_subscribed(self, obj):
-            author_id = self.context['view'].kwargs.get('user_id')
-            author = get_object_or_404(User, id=author_id)
-            return Follow.filter(user=self.context['request'].user, author=author).exists()
+    def create(self, validated_data):
+        user = User(
+            email=validated_data['email'],
+            username=validated_data['username']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
 
 
 class RecipeSerializer(serializers.ModelSerializer):
