@@ -5,6 +5,8 @@ from rest_framework.validators import UniqueTogetherValidator
 from recipes.models import Recipe, Tag, Ingredient
 from users.models import Follow, User
 
+from djoser import serializers as djoser_serializers
+
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
@@ -19,12 +21,10 @@ class UserSerializer(serializers.ModelSerializer):
     #     author = get_object_or_404(User, id=author_id)
     #     return Follow.filter(user=self.context['request'].user, author=author).exists()
 
-
     class Meta:
         fields = ['username', 'email', 'id', 'first_name',
                   # 'last_name', 'is_subscribed']
                   'last_name']
-
         model = User
         lookup_field = 'username'
         extra_kwargs = {
@@ -34,15 +34,26 @@ class UserSerializer(serializers.ModelSerializer):
             'password': {'required': True},
         }
 
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'id', 'first_name',
+                  # 'last_name', 'is_subscribed']
+                  'last_name', 'password']
+
     def create(self, validated_data):
         user = User(
             email=validated_data['email'],
-            username=validated_data['username']
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
         )
         user.set_password(validated_data['password'])
         user.save()
         return user
-
 
 
 class RecipeSerializer(serializers.ModelSerializer):

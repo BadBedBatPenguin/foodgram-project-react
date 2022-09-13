@@ -7,11 +7,12 @@ from .serializers import (RecipeSerializer, TagSerializer,
 from recipes.models import Recipe, Tag, Ingredient
 from users.models import User
 
+from djoser.views import UserViewSet as DjoserUserViewSet
+
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
-    # permission_classes = (AdminOnly,)
     lookup_field = 'id'
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
