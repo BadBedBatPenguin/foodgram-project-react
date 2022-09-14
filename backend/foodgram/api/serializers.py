@@ -66,14 +66,13 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'name', 'color', 'slug']
-        read_only_fields = ['id', 'name', 'color', 'slug']
 
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'value', 'measurement_unit']
-        read_only_fields = ['id', 'name', 'value', 'measurement_unit']
+        fields = ['id', 'name', 'measurement_unit']
+        read_only_fields = ['id', 'name', 'measurement_unit']
 
 
 class FollowSerializer(serializers.ModelSerializer):

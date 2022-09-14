@@ -5,10 +5,10 @@ User = get_user_model()
 
 class Ingredient(models.Model):
     name = models.TextField(verbose_name='Название')
-    value = models.PositiveSmallIntegerField(
-        verbose_name='Количество',
-        # validators=[year_validator],
-    )
+    # value = models.PositiveSmallIntegerField(
+    #     verbose_name='Количество',
+    #     # validators=[year_validator],
+    # )
     measurement_unit = models.CharField(max_length=10, verbose_name='Единица измерения')
 
     def __str__(self):
@@ -19,6 +19,16 @@ class Ingredient(models.Model):
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         # ordering = ('-pub_date',)
+
+
+class IngredientInRecipe(models.Model):
+    ingredient = models.ForeignKey(
+        to=Ingredient,
+        on_delete=models.CASCADE
+    )
+    amount = models.PositiveSmallIntegerField(
+        verbose_name='Количество'
+    )
 
 
 class Tag(models.Model):
@@ -48,7 +58,7 @@ class Recipe(models.Model):
         verbose_name='Автор'
     )
     ingredients = models.ManyToManyField(
-        to=Ingredient,
+        to=IngredientInRecipe,
         verbose_name='Ингредиенты',
         blank=True,
     )
