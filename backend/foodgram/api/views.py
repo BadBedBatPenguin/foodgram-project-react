@@ -2,13 +2,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 from api.permissions import IsAdminOrReadOnly
-from api.serializers import (RecipeSerializer, TagSerializer,
+from api.serializers import (RecipeSerializer, RecipeCreateSerializer, TagSerializer,
                           IngredientSerializer, UserSerializer)
-from recipes.models import Recipe, Tag, Ingredient
+from recipes.models import Recipe, Tag, Ingredient, IngredientInRecipe
 from users.models import User
-
-from djoser.views import UserViewSet as DjoserUserViewSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -29,6 +28,37 @@ class RecipeViewSet(viewsets.ModelViewSet):
     # filterset_fields = ('is_favorited', 'author', 'is_in_shopping_cart',
     #                     'tags')
     # permission_classes = (AuthorAdminModeratorOrReadOnly,)
+
+    def create_ingredients_in_recipe(self, recipe, ingredients):
+        for ingredient in ingredients:
+            print(ingredients)
+            IngredientInRecipe.objects.create(
+                ingredient=Ingredient.objects.get(id=ingredient['id']),
+                recipe=recipe,
+                amount=ingredient['amount']
+            )
+
+    def create_tags_in_recipe(self, recipe, tags):
+        for tag in tags:
+            recipe.tags.set([Tag.objects.get(id=tag)])
+
+    def create(self, request, *args, **kwargs):
+        serializer = RecipeCreateSerializer(
+            data=self.request.data,
+            context={'request': self.request}
+        )
+        if serializer.is_valid(raise_exception=True):
+            ingredients = serializer.validated_data.pop('ingredients')
+            tags = serializer.validated_data.pop('tags')
+            recipe = Recipe.objects.create(author=self.request.user, **serializer.validated_data)
+            self.create_ingredients_in_recipe(recipe=recipe, ingredients=ingredients)
+            self.create_tags_in_recipe(recipe=recipe, tags=tags)
+            serializer = RecipeSerializer(
+                instance=recipe,
+                context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(viewsets.ModelViewSet):

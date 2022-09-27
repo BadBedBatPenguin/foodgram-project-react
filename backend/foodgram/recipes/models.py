@@ -21,16 +21,6 @@ class Ingredient(models.Model):
         # ordering = ('-pub_date',)
 
 
-class IngredientInRecipe(models.Model):
-    ingredient = models.ForeignKey(
-        to=Ingredient,
-        on_delete=models.CASCADE
-    )
-    amount = models.PositiveSmallIntegerField(
-        verbose_name='Количество'
-    )
-
-
 class Tag(models.Model):
     name = models.TextField(verbose_name='Название')
     color = models.CharField(max_length=7, verbose_name='Цвет') # надо ещё валидацию придумать
@@ -49,6 +39,7 @@ class Tag(models.Model):
         verbose_name_plural = 'Тэги'
         # ordering = ('-pub_date',)
 
+
 class Recipe(models.Model):
     """Recipe model"""
     author = models.ForeignKey(
@@ -58,22 +49,21 @@ class Recipe(models.Model):
         verbose_name='Автор'
     )
     ingredients = models.ManyToManyField(
-        to=IngredientInRecipe,
-        verbose_name='Ингредиенты',
-        blank=True,
+        to=Ingredient,
+        verbose_name='Список ингредиентов',
+        through='IngredientInRecipe',
+        # through_fields=('recipe', 'ingredient')
     )
     tags = models.ManyToManyField(
         to=Tag,
-        verbose_name='Тэги',
-        blank=True,
+        verbose_name='Список id тегов',
     )
     image = models.ImageField(
-        'Картинка',
-        upload_to='recipes/', # настроить эту папку!
-        blank=True
+        verbose_name='Картинка',
+        upload_to='backend_media/'
     )
     name = models.CharField(max_length=200, verbose_name='Название')
-    text = models.TextField('Текст', help_text='Введите текст рецепта')
+    text = models.TextField('Описание', help_text='Введите текст рецепта')
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
         # validators=[year_validator],
@@ -93,3 +83,17 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         # ordering = ('-pub_date',)
+
+
+class IngredientInRecipe(models.Model):
+    ingredient = models.ForeignKey(
+        to=Ingredient,
+        on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        to=Recipe,
+        on_delete=models.CASCADE
+    )
+    amount = models.PositiveSmallIntegerField(
+        verbose_name='Количество'
+    )
