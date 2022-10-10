@@ -31,7 +31,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def create_ingredients_in_recipe(self, recipe, ingredients):
         for ingredient in ingredients:
-            print(ingredients)
+            # for key, value in ingredient:
+            #     print(f'{key}, {value}')  # потом убрать!
+            # print(ingredient)
+            # print(ingredients)
             IngredientInRecipe.objects.create(
                 ingredient=Ingredient.objects.get(id=ingredient['id']),
                 recipe=recipe,
@@ -47,7 +50,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             data=self.request.data,
             context={'request': self.request}
         )
+        print(f'request data: {self.request.data}')
         if serializer.is_valid(raise_exception=True):
+            print(f'serializer data: {serializer.data}')
+            print(f'serializer validated data: {serializer.validated_data}')
             ingredients = serializer.validated_data.pop('ingredients')
             tags = serializer.validated_data.pop('tags')
             recipe = Recipe.objects.create(author=self.request.user, **serializer.validated_data)
