@@ -9,3 +9,14 @@ class IsAdminOrReadOnly(permissions.BasePermission):
             request.method in permissions.SAFE_METHODS
             or (request.user.is_authenticated and request.user.is_admin())
         )
+
+
+class AuthorAdminOrReadOnly(permissions.BasePermission):
+    message = 'Внесение изменений доступно только автору и администратору'
+
+    def has_object_permission(self, request, view, obj):
+        return(
+            request.method in permissions.SAFE_METHODS
+            or (request.user.is_authenticated and request.user.is_admin())
+            or obj.author == request.user
+        )

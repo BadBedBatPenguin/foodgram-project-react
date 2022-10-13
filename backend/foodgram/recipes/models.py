@@ -1,27 +1,33 @@
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.core import validators
+from django.db import models
 
 User = get_user_model()
 
-class Ingredient(models.Model):
-    name = models.TextField(verbose_name='Название')
-    # value = models.PositiveSmallIntegerField(
-    #     verbose_name='Количество',
-    #     # validators=[year_validator],
-    # )
-    measurement_unit = models.CharField(max_length=10, verbose_name='Единица измерения')
 
-    def __str__(self):
-        return f'Ингредиент {self.name}'
+class Ingredient(models.Model):
+    """Модель Ingredient"""
+    name = models.TextField(verbose_name='Название')
+    measurement_unit = models.CharField(max_length=10, verbose_name='Единица измерения')
 
     class Meta:
         """Дополнительная информация по управлению моделью Ingredient."""
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        # ordering = ('-pub_date',)
+        ordering = ('-id',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique ingredient'
+            )
+        ]
+
+    def __str__(self):
+        return {self.name}
 
 
 class Tag(models.Model):
+    """Модель Tag"""
     name = models.TextField(verbose_name='Название')
     color = models.CharField(max_length=7, verbose_name='Цвет') # надо ещё валидацию придумать
     slug = models.SlugField(
@@ -30,18 +36,18 @@ class Tag(models.Model):
         verbose_name='Идентификатор',
     )
 
-    def __str__(self):
-        return f'Тэг {self.name}'
-
     class Meta:
         """Дополнительная информация по управлению моделью Tag."""
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
-        # ordering = ('-pub_date',)
+        ordering = ('-id',)
+
+    def __str__(self):
+        return self.name
 
 
 class Recipe(models.Model):
-    """Recipe model"""
+    """Модель Recipe"""
     author = models.ForeignKey(
         to=User,
         on_delete=models.CASCADE,
@@ -50,7 +56,7 @@ class Recipe(models.Model):
     )
     ingredients = models.ManyToManyField(
         to=Ingredient,
-        verbose_name='Список ингредиентов',
+        verbose_name='Ингредиенты',
         through='IngredientInRecipe',
         related_name='recipes',
         # through_fields=('recipe'
@@ -58,17 +64,19 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         to=Tag,
-        verbose_name='Список id тегов',
+        verbose_name='Тэги',
     )
     image = models.ImageField(
         verbose_name='Картинка',
         upload_to='backend_media/'
     )
     name = models.CharField(max_length=200, verbose_name='Название')
-    text = models.TextField('Описание', help_text='Введите текст рецепта')
+    text = models.TextField('Описание')
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
-        # validators=[year_validator],
+        validators=(validators.MinValueValidator(
+            1, message='Минимальное время приготовления - 1 минута'
+        ),),
     )
 
     # def is_favorited(self):
@@ -77,14 +85,14 @@ class Recipe(models.Model):
     # def is_in_shopping_cart(self):
     #     return self.id in self.shopping_cart # доделать как организую корзину
 
-    def __str__(self):
-        return f'Рецепт {self.name}'
-
     class Meta:
         """Дополнительная информация по управлению моделью Recipe."""
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        # ordering = ('-pub_date',)
+        ordering = ('-id',)
+
+    def __str__(self):
+        return self.name
 
 
 class IngredientInRecipe(models.Model):
@@ -97,5 +105,23 @@ class IngredientInRecipe(models.Model):
         on_delete=models.CASCADE
     )
     amount = models.PositiveSmallIntegerField(
-        verbose_name='Количество'
+        verbose_name='Количество',
+        validators=(validators.MinValueValidator(
+            1, message='Минимальное количество - 1 единица'
+        ),)
     )
+
+    class Meta:
+        """Дополнительная информация по управлению моделью IngredientInRecipe."""
+        verbose_name = 'Ингредиент с количеством'
+        verbose_name_plural = 'Ингредиенты с количеством'
+        ordering = ('-id',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ingredient', 'recipe'],
+                name='unique ingredients recipe'
+            )
+        ]
+
+    def __str__(self):
+        return self.ingredient.name

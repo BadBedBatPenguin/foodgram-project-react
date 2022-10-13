@@ -1,9 +1,10 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from api.permissions import IsAdminOrReadOnly
+from api.permissions import IsAdminOrReadOnly, AuthorAdminOrReadOnly
 from api.serializers import (RecipeSerializer, RecipeCreateSerializer, TagSerializer,
                           IngredientSerializer, UserSerializer)
 from recipes.models import Recipe, Tag, Ingredient, IngredientInRecipe
@@ -21,50 +22,63 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
+    # serializer_class = RecipeCreateSerializer
     queryset = Recipe.objects.all()
-    pagination_class = LimitOffsetPagination
+    pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     # filterset_class = RecipeFilter
     # filterset_fields = ('is_favorited', 'author', 'is_in_shopping_cart',
     #                     'tags')
-    # permission_classes = (AuthorAdminModeratorOrReadOnly,)
+    permission_classes = (AuthorAdminOrReadOnly,)
 
-    def create_ingredients_in_recipe(self, recipe, ingredients):
-        for ingredient in ingredients:
-            # for key, value in ingredient:
-            #     print(f'{key}, {value}')  # потом убрать!
-            # print(ingredient)
-            # print(ingredients)
-            IngredientInRecipe.objects.create(
-                ingredient=Ingredient.objects.get(id=ingredient['id']),
-                recipe=recipe,
-                amount=ingredient['amount']
-            )
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
-    def create_tags_in_recipe(self, recipe, tags):
-        for tag in tags:
-            recipe.tags.set([Tag.objects.get(id=tag)])
+    # @action(detail=True, methods=['get', 'delete'],
+    #         permission_classes=[IsAuthenticated])
+    # def favorite(self, request, pk=None):
+    #     if request.method == 'GET':
+    #         return self.add_obj(Favorite, request.user, pk)
+    #     elif request.method == 'DELETE':
+    #         return self.delete_obj(Favorite, request.user, pk)
+    #     return None
 
-    def create(self, request, *args, **kwargs):
-        serializer = RecipeCreateSerializer(
-            data=self.request.data,
-            context={'request': self.request}
-        )
-        print(f'request data: {self.request.data}')
-        if serializer.is_valid(raise_exception=True):
-            print(f'serializer data: {serializer.data}')
-            print(f'serializer validated data: {serializer.validated_data}')
-            ingredients = serializer.validated_data.pop('ingredients')
-            tags = serializer.validated_data.pop('tags')
-            recipe = Recipe.objects.create(author=self.request.user, **serializer.validated_data)
-            self.create_ingredients_in_recipe(recipe=recipe, ingredients=ingredients)
-            self.create_tags_in_recipe(recipe=recipe, tags=tags)
-            serializer = RecipeSerializer(
-                instance=recipe,
-                context={'request': request}
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def create_ingredients_in_recipe(self, recipe, ingredients):
+    #     for ingredient in ingredients:
+    #         # for key, value in ingredient:
+    #         #     print(f'{key}, {value}')  # потом убрать!
+    #         # print(ingredient)
+    #         # print(ingredients)
+    #         IngredientInRecipe.objects.create(
+    #             ingredient=Ingredient.objects.get(id=ingredient['id']),
+    #             recipe=recipe,
+    #             amount=ingredient['amount']
+    #         )
+    #
+    # def create_tags_in_recipe(self, recipe, tags):
+    #     for tag in tags:
+    #         recipe.tags.set([Tag.objects.get(id=tag)])
+    #
+    # def create(self, request, *args, **kwargs):
+    #     serializer = RecipeCreateSerializer(
+    #         data=self.request.data,
+    #         context={'request': self.request}
+    #     )
+    #     print(f'request data: {self.request.data}')
+    #     if serializer.is_valid(raise_exception=True):
+    #         print(f'serializer data: {serializer.data}')
+    #         print(f'serializer validated data: {serializer.validated_data}')
+    #         ingredients = serializer.validated_data.pop('ingredients')
+    #         tags = serializer.validated_data.pop('tags')
+    #         recipe = Recipe.objects.create(author=self.request.user, **serializer.validated_data)
+    #         self.create_ingredients_in_recipe(recipe=recipe, ingredients=ingredients)
+    #         self.create_tags_in_recipe(recipe=recipe, tags=tags)
+    #         serializer = RecipeSerializer(
+    #             instance=recipe,
+    #             context={'request': request}
+    #         )
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(viewsets.ModelViewSet):
