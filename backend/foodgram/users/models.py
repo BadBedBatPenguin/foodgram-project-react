@@ -41,13 +41,8 @@ class User(AbstractUser):
         choices=ROLE_CHOICES,
         default=USER,
     )
-    # favourites = models.ManyToManyField(
-    #     to=Recipe,
-    #     verbose_name='Избранное',
-    #     blank=True,
-    # )
 
-    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'password']
 
     def is_admin(self):
         return (
@@ -71,16 +66,12 @@ class Follow(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         related_name='follower',
         verbose_name='Подписчик',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         related_name='following',
         verbose_name='Автор',
     )
@@ -91,3 +82,9 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique follow',
+            )
+        ]
