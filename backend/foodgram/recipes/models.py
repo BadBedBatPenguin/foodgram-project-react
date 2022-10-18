@@ -23,7 +23,7 @@ class Ingredient(models.Model):
         ]
 
     def __str__(self):
-        return {self.name}
+        return self.name
 
 
 class Tag(models.Model):

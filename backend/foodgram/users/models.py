@@ -1,21 +1,5 @@
-from datetime import date
-
-# from recipes.models import Recipe
-
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.shortcuts import get_object_or_404
-
-GUEST = 'guest'
-USER = 'user'
-ADMIN = 'admin'
-ROLE_CHOICES = [
-    (GUEST, 'гость'),
-    (USER, 'пользователь'),
-    (ADMIN, 'администратор'),
-]
 
 
 class User(AbstractUser):
@@ -36,22 +20,9 @@ class User(AbstractUser):
         'Пароль',
         max_length=150
     )
-    role = models.CharField(
-        max_length=max(len(role) for _, role in ROLE_CHOICES),
-        choices=ROLE_CHOICES,
-        default=USER,
-    )
 
     REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'password']
 
-    def is_admin(self):
-        return (
-            self.role == ADMIN
-            or self.is_staff
-        )
-
-    def is_user(self):
-        return self.role == USER
 
     def __str__(self):
         return self.username

@@ -9,7 +9,8 @@ class IngredientInline(admin.StackedInline):
 
 class RecipeAdmin(admin.ModelAdmin):
     inlines = (IngredientInline,)
-    list_display = ['image', 'name', 'text', 'cooking_time']
+    list_display = ('name', 'author', 'text')
+    list_filter = ('author', 'name', 'tags')
 
 
 admin.site.register(Tag)

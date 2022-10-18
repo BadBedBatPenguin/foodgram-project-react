@@ -1,13 +1,17 @@
-from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Recipe, Tag, Ingredient, IngredientInRecipe
 from users.models import Follow, User
 
-from djoser import serializers as djoser_serializers
 from drf_extra_fields.fields import Base64ImageField
+
+
+LEAST_ONE_INGREDIENT_MESSAGE = 'Требуется не менее одного ингредиента для рецепта'
+UNIQUE_INGREDIENT_MESSAGE = 'Ингредиенты должны быть уникальными'
+LEAST_ONE_AMOUNT_MESSAGE = 'Количество ингредиента должно быть не менее 1'
 
 
 class CustomUserSerializer(UserSerializer):
@@ -18,44 +22,34 @@ class CustomUserSerializer(UserSerializer):
     )
     is_subscribed = serializers.SerializerMethodField()
 
-    def get_is_subscribed(self, obj):
-        author_id = self.context['view'].kwargs.get('user_id')
-        author = get_object_or_404(User, id=author_id)
-        return Follow.filter(user=self.context['request'].user, author=author).exists()
-
     class Meta:
-        fields = ('username', 'email', 'id', 'first_name',
-                  'last_name', 'is_subscribed')
-                  # 'last_name')
+        fields = ('username', 'email', 'id', 'first_name', 'last_name',
+                  # )
+                   'is_subscribed')
         model = User
         lookup_field = 'username'
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Follow.objects.filter(user=user, author=obj.id).exists()
+
+
+class CustomUserCreateSerializer(UserCreateSerializer):
+    # password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'id', 'first_name',
+                  'last_name', 'password')
         extra_kwargs = {
+            'username': {'required': True},
             'email': {'required': True},
             'first_name': {'required': True},
             'last_name': {'required': True},
             'password': {'required': True},
         }
-
-
-class CustomUserCreateSerializer(UserCreateSerializer):
-    password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'id', 'first_name',
-                  # 'last_name', 'is_subscribed')
-                  'last_name', 'password')
-
-    # def create(self, validated_data):
-    #     user = User(
-    #         email=validated_data['email'],
-    #         username=validated_data['username'],
-    #         first_name=validated_data['first_name'],
-    #         last_name=validated_data['last_name']
-    #     )
-    #     user.set_password(validated_data['password'])
-    #     user.save()
-    #     return user
 
 
 class IngredientInRecipeSerializer(serializers.ModelSerializer):
@@ -72,7 +66,6 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
                 fields=('ingredient', 'recipe')
             ),
         )
-        # fields = ('id', 'amount')
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
@@ -130,18 +123,17 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = self.initial_data.get('ingredients')
         if not ingredients:
             raise serializers.ValidationError({
-                'ingredients': 'Требуется не менее одного ингредиента для рецепта'})
+                'ingredients': LEAST_ONE_INGREDIENT_MESSAGE})
         ingredient_list = []
         for ingredient_item in ingredients:
             ingredient = get_object_or_404(Ingredient,
                                            id=ingredient_item['id'])
             if ingredient in ingredient_list:
-                raise serializers.ValidationError('Ингредиенты должны '
-                                                  'быть уникальными')
+                raise serializers.ValidationError(UNIQUE_INGREDIENT_MESSAGE)
             ingredient_list.append(ingredient)
             if int(ingredient_item['amount']) < 0:
                 raise serializers.ValidationError({
-                    'ingredients': 'Количество ингредиента должно быть не менее 1'
+                    'ingredients': LEAST_ONE_AMOUNT_MESSAGE
                 })
         data['ingredients'] = ingredients
         return data

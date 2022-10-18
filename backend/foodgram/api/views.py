@@ -5,21 +5,29 @@ from djoser.views import UserViewSet
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from api.pagination import PageNumberLimitPagination
+from api.permissions import IsAdminOrReadOnly, AuthorAdminOrReadOnly
+from api.serializers import (FollowSerializer, IngredientSerializer, RecipeSerializer,
+                             ShortRecipeSerializer, TagSerializer, CustomUserSerializer)
+from recipes.models import Cart, Favorite, Ingredient, IngredientInRecipe, Recipe, Tag
+from users.models import Follow, User
+
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from api.pagination import PageNumberLimitPagination
-from api.permissions import IsAdminOrReadOnly, AuthorAdminOrReadOnly
-from api.serializers import (RecipeSerializer, TagSerializer, FollowSerializer,
-                          IngredientSerializer, UserSerializer, ShortRecipeSerializer)
-from recipes.models import Recipe, Tag, Ingredient, IngredientInRecipe, Cart, Favorite
-from users.models import User, Follow
+
+
+SELFSUBSCRIPTION = 'Вы не можете подписываться на самого себя'
+SUBSCRIBED_ALREADY = 'Вы уже подписаны на данного пользователя'
+SELFUNSUBSCRIPTION = 'Вы не можете отписываться от самого себя'
+UNSUBSCRIBED_ALREADY = 'Вы уже отписались'
 
 
 class CustomUserViewSet(UserViewSet):
-    serializer_class = UserSerializer
+    serializer_class = CustomUserSerializer
     queryset = User.objects.all()
     lookup_field = 'id'
     pagination_class = PageNumberLimitPagination
@@ -34,11 +42,11 @@ class CustomUserViewSet(UserViewSet):
         if request.method == 'POST':
             if user == author:
                 return Response({
-                    'errors': 'Вы не можете подписываться на самого себя'
+                    'errors': SELFSUBSCRIPTION
                 }, status=status.HTTP_400_BAD_REQUEST)
             if Follow.objects.filter(user=user, author=author).exists():
                 return Response({
-                    'errors': 'Вы уже подписаны на данного пользователя'
+                    'errors': SUBSCRIBED_ALREADY
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             follow = Follow.objects.create(user=user, author=author)
@@ -49,7 +57,7 @@ class CustomUserViewSet(UserViewSet):
         if request.method == 'DELETE':
             if user == author:
                 return Response({
-                    'errors': 'Вы не можете отписываться от самого себя'
+                    'errors': SELFUNSUBSCRIPTION
                 }, status=status.HTTP_400_BAD_REQUEST)
             follow = Follow.objects.filter(user=user, author=author)
             if follow.exists():
@@ -57,7 +65,7 @@ class CustomUserViewSet(UserViewSet):
                 return Response(status=status.HTTP_204_NO_CONTENT)
 
             return Response({
-                'errors': 'Вы уже отписались'
+                'errors': UNSUBSCRIBED_ALREADY
             }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
