@@ -4,6 +4,9 @@ from django.db import models
 
 User = get_user_model()
 
+MIN_COOKING_TIME = 'Минимальное время приготовления - 1 минута'
+MIN_AMOUNT = 'Минимальное количество - 1 единица'
+
 
 class Ingredient(models.Model):
     """Модель Ingredient"""
@@ -11,7 +14,6 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField(max_length=10, verbose_name='Единица измерения')
 
     class Meta:
-        """Дополнительная информация по управлению моделью Ingredient."""
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ('-id',)
@@ -29,15 +31,13 @@ class Ingredient(models.Model):
 class Tag(models.Model):
     """Модель Tag"""
     name = models.TextField(verbose_name='Название')
-    color = models.CharField(max_length=7, verbose_name='Цвет') # надо ещё валидацию придумать
+    color = models.CharField(max_length=7, verbose_name='Цвет')
     slug = models.SlugField(
         unique=True,
-        # max_length=50,
         verbose_name='Идентификатор',
     )
 
     class Meta:
-        """Дополнительная информация по управлению моделью Tag."""
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
         ordering = ('-id',)
@@ -59,8 +59,6 @@ class Recipe(models.Model):
         verbose_name='Ингредиенты',
         through='IngredientInRecipe',
         related_name='recipes',
-        # through_fields=('recipe'
-        # , 'ingredient')
     )
     tags = models.ManyToManyField(
         to=Tag,
@@ -75,18 +73,11 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
         validators=(validators.MinValueValidator(
-            1, message='Минимальное время приготовления - 1 минута'
+            1, message=MIN_COOKING_TIME
         ),),
     )
 
-    # def is_favorited(self):
-    #     return self.id in self.favorite # доделать как организую раздел избранное
-    #
-    # def is_in_shopping_cart(self):
-    #     return self.id in self.shopping_cart # доделать как организую корзину
-
     class Meta:
-        """Дополнительная информация по управлению моделью Recipe."""
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('-id',)
@@ -107,12 +98,11 @@ class IngredientInRecipe(models.Model):
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
         validators=(validators.MinValueValidator(
-            1, message='Минимальное количество - 1 единица'
+            1, message=MIN_AMOUNT
         ),)
     )
 
     class Meta:
-        """Дополнительная информация по управлению моделью IngredientInRecipe."""
         verbose_name = 'Ингредиент с количеством'
         verbose_name_plural = 'Ингредиенты с количеством'
         ordering = ('-id',)

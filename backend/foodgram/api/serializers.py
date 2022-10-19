@@ -37,7 +37,6 @@ class CustomUserSerializer(UserSerializer):
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
-    # password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User

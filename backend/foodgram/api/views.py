@@ -1,29 +1,34 @@
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from api.filters import RecipeFilterSet
 from api.pagination import PageNumberLimitPagination
 from api.permissions import IsAdminOrReadOnly, AuthorAdminOrReadOnly
 from api.serializers import (FollowSerializer, IngredientSerializer, RecipeSerializer,
                              ShortRecipeSerializer, TagSerializer, CustomUserSerializer)
 from recipes.models import Cart, Favorite, Ingredient, IngredientInRecipe, Recipe, Tag
-from users.models import Follow, User
+from users.models import Follow
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 
+User = get_user_model()
+
 SELFSUBSCRIPTION = 'Вы не можете подписываться на самого себя'
 SUBSCRIBED_ALREADY = 'Вы уже подписаны на данного пользователя'
 SELFUNSUBSCRIPTION = 'Вы не можете отписываться от самого себя'
 UNSUBSCRIBED_ALREADY = 'Вы уже отписались'
+RECIPE_IN_FAVORITES = 'Рецепт уже добавлен в список'
+RECIPE_REMOVED = 'Рецепт уже удален'
+PDF_HEADER = 'Список ингредиентов'
 
 
 class CustomUserViewSet(UserViewSet):
@@ -31,8 +36,6 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     lookup_field = 'id'
     pagination_class = PageNumberLimitPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('username',)
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated])
@@ -84,11 +87,8 @@ class CustomUserViewSet(UserViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
-    pagination_class = PageNumberPagination
-    filter_backends = (DjangoFilterBackend,)
-    # filterset_class = RecipeFilter
-    # filterset_fields = ('is_favorited', 'author', 'is_in_shopping_cart',
-    #                     'tags')
+    pagination_class = PageNumberLimitPagination
+    filterset_class = RecipeFilterSet
     permission_classes = (AuthorAdminOrReadOnly,)
 
     def perform_create(self, serializer):
@@ -106,7 +106,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def add_recipe(self, model, user, recipe_id):
         if model.objects.filter(user=user, recipe__id=recipe_id).exists():
             return Response({
-                'errors': 'Рецепт уже добавлен в список'
+                'errors': RECIPE_IN_FAVORITES
             }, status=status.HTTP_400_BAD_REQUEST)
         recipe = get_object_or_404(Recipe, id=recipe_id)
         model.objects.create(user=user, recipe=recipe)
@@ -119,7 +119,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response({
-            'errors': 'Рецепт уже удален'
+            'errors': RECIPE_REMOVED
         }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post', 'delete'],
@@ -155,7 +155,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                            'filename="shopping_list.pdf"')
         page = canvas.Canvas(response)
         page.setFont('Montserrat', size=24)
-        page.drawCentredString(200, 800, 'Список ингредиентов')
+        page.drawCentredString(200, 800, PDF_HEADER)
         page.setFont('Montserrat', size=16)
         height = 750
         for i, (name, data) in enumerate(final_list.items(), 1):
