@@ -22,7 +22,6 @@ class CustomUserSerializer(UserSerializer):
 
     class Meta:
         fields = ('username', 'email', 'id', 'first_name', 'last_name',
-                  # )
                    'is_subscribed')
         model = User
         lookup_field = 'username'
@@ -136,18 +135,26 @@ class RecipeSerializer(serializers.ModelSerializer):
         return data
 
     def create_ingredients(self, ingredients, recipe):
-        for ingredient in ingredients:
-            IngredientInRecipe.objects.create(
+        # for ingredient in ingredients:
+        #     IngredientInRecipe.objects.create(
+        #         recipe=recipe,
+        #         ingredient_id=ingredient.get('id'),
+        #         amount=ingredient.get('amount'),
+        #     )
+        IngredientInRecipe.objects.bulk_create(
+            [IngredientInRecipe(
                 recipe=recipe,
                 ingredient_id=ingredient.get('id'),
-                amount=ingredient.get('amount'),
-            )
+                amount=ingredient.get('amount')
+            ) for ingredient in ingredients]
+        )
+
 
     def create(self, validated_data):
         image = validated_data.pop('image')
         ingredients_data = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(image=image, **validated_data)
-        tags_data = self.initial_data.get('tags')
+        tags_data = validated_data.get('tags')
         recipe.tags.set(tags_data)
         self.create_ingredients(ingredients_data, recipe)
         return recipe
