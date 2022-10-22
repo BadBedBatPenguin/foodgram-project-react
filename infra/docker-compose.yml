@@ -1,5 +1,12 @@
-version: '3.3'
+version: '3.8'
 services:
+
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - /var/lib/postgresql/data/
+    env_file:
+      - ./.env
 
   backend:
     build:
@@ -11,6 +18,8 @@ services:
       - media_value:/app/backend_media/
     env_file:
       - ./.env
+    depends_on:
+      - db
   
   frontend:
     build:

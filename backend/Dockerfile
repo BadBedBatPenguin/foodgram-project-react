@@ -8,4 +8,4 @@ COPY foodgram/ /app
 WORKDIR /app
 RUN python3 manage.py migrate
 RUN python3 manage.py collectstatic
-CMD ["python3", "manage.py", "runserver", "0:8000"]
+CMD ["gunicorn", "foodgram.wsgi:application", "--bind", "0:8000"]
