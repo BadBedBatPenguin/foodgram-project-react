@@ -24,13 +24,13 @@ class User(AbstractUser):
 
     REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'password']
 
-    def __str__(self):
-        return self.username
-
     class Meta:
         ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        return self.username
 
 
 class Follow(models.Model):
@@ -48,9 +48,6 @@ class Follow(models.Model):
         verbose_name='Автор',
     )
 
-    def __str__(self) -> str:
-        return f'{self.user} подписан на {self.author}'
-
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
@@ -60,3 +57,6 @@ class Follow(models.Model):
                 name='unique follow',
             )
         ]
+
+    def __str__(self) -> str:
+        return f'{self.user} подписан на {self.author}'

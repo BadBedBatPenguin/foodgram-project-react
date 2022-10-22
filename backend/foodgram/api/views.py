@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
@@ -14,8 +15,8 @@ from api.filters import RecipeFilterSet
 from api.pagination import PageNumberLimitPagination
 from api.permissions import AuthorAdminOrReadOnly, IsAdminOrReadOnly
 from api.serializers import (
-    CustomUserSerializer, FollowSerializer, IngredientSerializer, RecipeSerializer, ShortRecipeSerializer,
-    TagSerializer)
+    CustomUserSerializer, FollowSerializer, IngredientSerializer, RecipeSerializer, RecipeCreateUpdateSerializer,
+    ShortRecipeSerializer, TagSerializer)
 from recipes.models import Cart, Favorite, Ingredient, IngredientInRecipe, Recipe, Tag
 from users.models import Follow
 
@@ -84,11 +85,15 @@ class CustomUserViewSet(UserViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
     pagination_class = PageNumberLimitPagination
     filterset_class = RecipeFilterSet
     permission_classes = (AuthorAdminOrReadOnly,)
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return RecipeCreateUpdateSerializer
+        return RecipeSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -133,20 +138,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'],
             permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
-        final_list = {}
         ingredients = IngredientInRecipe.objects.filter(
             recipe__cart__user=request.user).values_list(
             'ingredient__name', 'ingredient__measurement_unit',
             'amount')
-        for item in ingredients:
-            name = item[0]
-            if name not in final_list:
-                final_list[name] = {
-                    'measurement_unit': item[1],
-                    'amount': item[2]
-                }
-            else:
-                final_list[name]['amount'] += item[2]
+        counted_ingredients = ingredients.values(
+            'ingredient__name', 'ingredient__measurement_unit').annotate(
+            total=Sum('amount'))
         pdfmetrics.registerFont(
             TTFont('Montserrat', 'Montserrat.ttf', 'UTF-8'))
         response = HttpResponse(content_type='application/pdf')
@@ -157,9 +155,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         page.drawCentredString(200, 800, PDF_HEADER)
         page.setFont('Montserrat', size=16)
         height = 750
-        for i, (name, data) in enumerate(final_list.items(), 1):
-            page.drawString(75, height, (f'<{i}> {name} - {data["amount"]}, '
-                                         f'{data["measurement_unit"]}'))
+        for ingredient in counted_ingredients:
+            page.drawString(75, height, (f'{ingredient["ingredient__name"]} - {ingredient["total"]}, '
+                                         f'{ingredient["ingredient__measurement_unit"]}'))
             height -= 25
         page.showPage()
         page.save()
