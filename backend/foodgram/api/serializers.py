@@ -122,8 +122,6 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                   'image', 'name', 'text', 'cooking_time')
 
     def validate_ingredients(self, data):
-        print('validation started')
-        print(f'data: {data}')
         ingredients = data
         if not ingredients:
             raise serializers.ValidationError({
@@ -142,7 +140,6 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         return data
 
     def create_ingredients(self, ingredients, recipe):
-        print('create_ingredients started')
         IngredientInRecipe.objects.bulk_create(
             [IngredientInRecipe(
                 recipe=recipe,
@@ -152,7 +149,6 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        print('create method started')
         image = validated_data.pop('image')
         ingredients_data = validated_data.pop('ingredientinrecipe_set')
         tags_data = validated_data.pop('tags')
@@ -162,8 +158,6 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        print('update method started')
-        print(f'validated_data: {validated_data}')
         instance.tags.clear()
         tags_data = validated_data.pop('tags')
         instance.tags.set(tags_data)
