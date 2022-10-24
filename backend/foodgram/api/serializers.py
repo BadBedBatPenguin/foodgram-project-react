@@ -1,12 +1,13 @@
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers
-
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
+from rest_framework import serializers
 from users.models import Follow, User
 
-LEAST_ONE_INGREDIENT_MESSAGE = 'Требуется не менее одного ингредиента для рецепта'
+LEAST_ONE_INGREDIENT_MESSAGE = (
+    'Требуется не менее одного ингредиента для рецепта'
+)
 UNIQUE_INGREDIENT_MESSAGE = 'Ингредиенты должны быть уникальными'
 LEAST_ONE_AMOUNT_MESSAGE = 'Количество ингредиента должно быть не менее 1'
 
@@ -49,7 +50,8 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 class IngredientInRecipeSerializer(serializers.ModelSerializer):
     name = serializers.StringRelatedField(source='ingredient.name')
-    measurement_unit = serializers.StringRelatedField(source='ingredient.measurement_unit')
+    measurement_unit = serializers.StringRelatedField(
+        source='ingredient.measurement_unit')
     id = serializers.IntegerField(source='ingredient.id')
 
     class Meta:
@@ -128,8 +130,10 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 'ingredients': LEAST_ONE_INGREDIENT_MESSAGE})
         ingredient_list = []
         for ingredient_item in ingredients:
-            ingredient = get_object_or_404(Ingredient,
-                                           id=ingredient_item['ingredient']['id'])
+            ingredient = get_object_or_404(
+                Ingredient,
+                id=ingredient_item['ingredient']['id']
+            )
             if ingredient in ingredient_list:
                 raise serializers.ValidationError(UNIQUE_INGREDIENT_MESSAGE)
             ingredient_list.append(ingredient)
@@ -162,18 +166,20 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         tags_data = validated_data.pop('tags')
         instance.tags.set(tags_data)
         IngredientInRecipe.objects.filter(recipe=instance).delete()
-        self.create_ingredients(validated_data.pop('ingredientinrecipe_set'), instance)
+        self.create_ingredients(
+            validated_data.pop('ingredientinrecipe_set'),
+            instance
+        )
         super().update(instance, validated_data)
         return instance
 
     def to_representation(self, instance):
-        data = RecipeSerializer(
+        return RecipeSerializer(
             instance,
             context={
                 'request': self.context.get('request')
             }
         ).data
-        return data
 
 
 class FollowSerializer(serializers.ModelSerializer):

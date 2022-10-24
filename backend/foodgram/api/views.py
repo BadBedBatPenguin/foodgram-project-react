@@ -1,8 +1,17 @@
+from api.filters import RecipeFilterSet
+from api.pagination import PageNumberLimitPagination
+from api.permissions import AuthorAdminOrReadOnly, IsAdminOrReadOnly
+from api.serializers import (CustomUserSerializer, FollowSerializer,
+                             IngredientSerializer,
+                             RecipeCreateUpdateSerializer, RecipeSerializer,
+                             ShortRecipeSerializer, TagSerializer)
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
+from recipes.models import (Cart, Favorite, Ingredient, IngredientInRecipe,
+                            Recipe, Tag)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -10,14 +19,6 @@ from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
-from api.filters import RecipeFilterSet
-from api.pagination import PageNumberLimitPagination
-from api.permissions import AuthorAdminOrReadOnly, IsAdminOrReadOnly
-from api.serializers import (
-    CustomUserSerializer, FollowSerializer, IngredientSerializer, RecipeSerializer, RecipeCreateUpdateSerializer,
-    ShortRecipeSerializer, TagSerializer)
-from recipes.models import Cart, Favorite, Ingredient, IngredientInRecipe, Recipe, Tag
 from users.models import Follow
 
 User = get_user_model()
@@ -70,8 +71,10 @@ class CustomUserViewSet(UserViewSet):
             return Response({
                 'errors': UNSUBSCRIBED_ALREADY
             }, status=status.HTTP_400_BAD_REQUEST)
+        return 'forbidden method'
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'],
+            permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
         user = request.user
         queryset = Follow.objects.filter(user=user)
@@ -156,8 +159,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         page.setFont('Montserrat', size=16)
         height = 750
         for ingredient in counted_ingredients:
-            page.drawString(75, height, (f'{ingredient["ingredient__name"]} - {ingredient["total"]}, '
-                                         f'{ingredient["ingredient__measurement_unit"]}'))
+            page.drawString(75, height, (
+                f'{ingredient["ingredient__name"]} - {ingredient["total"]}, '
+                f'{ingredient["ingredient__measurement_unit"]}'
+            ))
             height -= 25
         page.showPage()
         page.save()

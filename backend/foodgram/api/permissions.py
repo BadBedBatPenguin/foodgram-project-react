@@ -1,8 +1,9 @@
 from rest_framework import permissions
 
-
-ADMIN_PERMISSION_MESSAGE = 'Для внесения изменений требуются права администратора'
-AUTHOR_ADMIN_PERMISSION_MESSAGE = 'Внесение изменений доступно только автору и администратору'
+ADMIN_PERMISSION_MESSAGE = (
+    'Для внесения изменений требуются права администратора')
+AUTHOR_ADMIN_PERMISSION_MESSAGE = (
+    'Внесение изменений доступно только автору и администратору')
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
@@ -19,7 +20,7 @@ class AuthorAdminOrReadOnly(permissions.BasePermission):
     message = AUTHOR_ADMIN_PERMISSION_MESSAGE
 
     def has_object_permission(self, request, view, obj):
-        return(
+        return (
             request.method in permissions.SAFE_METHODS
             or (request.user.is_authenticated and request.user.is_staff)
             or obj.author == request.user

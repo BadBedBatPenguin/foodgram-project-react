@@ -4,14 +4,12 @@ import os
 from django.core.management import BaseCommand
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
-
-from recipes import models
-
 from foodgram.settings import BASE_DIR
+from recipes import models
 
 CSV_FILES = [
     ['ingredients.csv', models.Ingredient],
-    ]
+]
 
 FOREIGN_FIELD_NAMES = {
 }

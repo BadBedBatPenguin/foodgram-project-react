@@ -11,7 +11,8 @@ MIN_AMOUNT = 'Минимальное количество - 1 единица'
 class Ingredient(models.Model):
     """Модель Ingredient"""
     name = models.TextField(verbose_name='Название')
-    measurement_unit = models.CharField(max_length=10, verbose_name='Единица измерения')
+    measurement_unit = models.CharField(
+        max_length=10, verbose_name='Единица измерения')
 
     class Meta:
         verbose_name = 'Ингредиент'
