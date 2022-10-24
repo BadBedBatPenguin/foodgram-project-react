@@ -19,7 +19,7 @@ services:
       - ./.env
   
   frontend:
-    image: macass/foodgram-frontend
+    image: macass/foodgram-frontend:v1
 
     volumes:
       - ../frontend/:/app/result_build/

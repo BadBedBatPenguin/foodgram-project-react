@@ -58,10 +58,9 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
-          # passphrase: ${{ secrets.PASSPHRASE }} # Если ваш ssh-ключ защищён фразой-паролем
-          script:
+          script: |
             sudo docker-compose stop
-            sudo docker-compose rm foodgram-backend
+            sudo docker-compose rm ${{ secrets.DOCKER_USERNAME }}/foodgram-backend
             rm .env
             touch .env
             echo SECRET_KEY="${{ secrets.SECRET_KEY }}" >> .env
