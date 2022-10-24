@@ -17,12 +17,13 @@ class Ingredient(models.Model):
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ('-id',)
-        constraints = [
-            models.UniqueConstraint(
-                fields=['name', 'measurement_unit'],
-                name='unique ingredient'
-            )
-        ]
+        # constraints = [
+        #     models.UniqueTogether(
+        #         fields=['name', 'measurement_unit'],
+        #         name='unique ingredient'
+        #     )
+        # ]
+        unique_together = ('name', 'measurement_unit',)
 
     def __str__(self):
         return self.name
