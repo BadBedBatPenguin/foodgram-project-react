@@ -61,7 +61,7 @@ jobs:
           # passphrase: ${{ secrets.PASSPHRASE }} # Если ваш ssh-ключ защищён фразой-паролем
           script:
             sudo docker-compose stop
-            sudo docker-compose rm backend
+            sudo docker-compose rm foodgram-backend
             rm .env
             touch .env
             echo SECRET_KEY="${{ secrets.SECRET_KEY }}" >> .env
