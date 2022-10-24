@@ -60,8 +60,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           # passphrase: ${{ secrets.PASSPHRASE }} # Если ваш ssh-ключ защищён фразой-паролем
           script:
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-backend
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-frontend
             sudo docker-compose stop
             sudo docker-compose rm backend
             rm .env
