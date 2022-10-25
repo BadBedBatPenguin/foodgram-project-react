@@ -1,4 +1,4 @@
-from api.filters import RecipeFilterSet
+from api.filters import IngredientSearchFilter, RecipeFilterSet
 from api.pagination import PageNumberLimitPagination
 from api.permissions import AuthorAdminOrReadOnly, IsAdminOrReadOnly
 from api.serializers import (CustomUserSerializer, FollowSerializer,
@@ -179,7 +179,7 @@ class TagViewSet(viewsets.ModelViewSet):
 class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
+    filter_backends = (IngredientSearchFilter,)
+    search_fields = ('^name',)
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = None
