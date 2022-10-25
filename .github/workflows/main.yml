@@ -71,4 +71,11 @@ jobs:
             echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
             echo DB_HOST=${{ secrets.DB_HOST }} >> .env
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+            echo DJANGO_SUPERUSER_PASSWORD=${{ secrets.DJANGO_SUPERUSER_PASSWORD }} >> .env
+            echo DJANGO_SUPERUSER_USERNAME=${{ secrets.DJANGO_SUPERUSER_USERNAME }} >> .env
+            echo DJANGO_SUPERUSER_EMAIL=${{ secrets.DJANGO_SUPERUSER_EMAIL }} >> .env
             sudo docker-compose up -d
+            sudo docker container exec macass_backend_1 python manage.py migrate
+            sudo docker container exec macass_backend_1 python manage.py createsuperuser --noinput
+            sudo docker container exec macass_backend_1 python manage.py collectstatic --noinput
+            sudo docker container exec macass_backend_1 python manage.py import_csv
