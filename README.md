@@ -56,7 +56,7 @@ python3 manage.py import_csv
 ```
 
 ## Running project
-To look how project runs follow this link: ([YAMDB](https://158.160.13.236))
+To look how project runs follow this link: ([Foodgram](https://158.160.13.236))
 ## Autor
 
 Tsyos Max ([BadBedBatPenguin](https://github.com/BadBedBatPenguin))
