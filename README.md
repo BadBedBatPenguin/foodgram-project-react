@@ -16,7 +16,7 @@ cd foodgram-project-react
 Create and fill .env file as in sample:
 ```
 SECRET_KEY=<secret_key_from_settings.py>
-ALLOWED_HOSTS='<host IPs and names separated with whitespace>'
+ALLOWED_HOSTS=<host IPs and names separated with whitespace>
 DB_ENGINE=django.db.backends.postgresql
 DB_NAME=<database_name>
 POSTGRES_USER=<PostgreSQL_username>
