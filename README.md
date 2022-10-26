@@ -17,7 +17,6 @@ Create and fill .env file as in sample:
 ```
 SECRET_KEY=<secret_key_from_settings.py>
 ALLOWED_HOSTS='<host IPs and names separated with whitespace>'
-DEBUG=False
 DB_ENGINE=django.db.backends.postgresql
 DB_NAME=<database_name>
 POSTGRES_USER=<PostgreSQL_username>
@@ -47,16 +46,8 @@ docker-compose exec web python manage.py createsuperuser
 docker-compose exec web python manage.py collectstatic --no-input
 ```
 
-## Filling database with data from csv files:
-Put all necessary csv files to "foodgram-project-react/backend/foodgram/data/" \
-run command:
-
-```Shell
-python3 manage.py import_csv
-```
-
 ## Running project
-To look how project runs follow this link: ([Foodgram](https://158.160.13.236))
+To look how project runs follow this link: ([Foodgram](http://158.160.13.236))
 ## Autor
 
 Tsyos Max ([BadBedBatPenguin](https://github.com/BadBedBatPenguin))
