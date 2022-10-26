@@ -3,7 +3,6 @@ import os
 
 from django.core.management import BaseCommand
 from django.db.utils import IntegrityError
-from django.shortcuts import get_object_or_404
 from foodgram.settings import BASE_DIR
 from recipes import models
 
@@ -11,18 +10,12 @@ CSV_FILES = [
     ['ingredients.csv', models.Ingredient],
 ]
 
-FOREIGN_FIELD_NAMES = {
-}
 
-
-def save_model(model, row, fields_name):
+def save_model(model, row):
     try:
         obj = model()
-        for i, field in enumerate(row):
-            if fields_name[i] in FOREIGN_FIELD_NAMES.keys():
-                foreign_model = FOREIGN_FIELD_NAMES[fields_name[i]]
-                field = get_object_or_404(foreign_model, id=field)
-            setattr(obj, fields_name[i], field)
+        setattr(obj, 'name', row[0])
+        setattr(obj, 'measurement_unit', row[1])
         obj.save()
     except IntegrityError:
         print(f'Ингридиет {row[0]} '
@@ -34,9 +27,9 @@ def process_file(csv_file, model):
     fields_name = []
     with open(path, 'rt', encoding="utf8") as f:
         reader = csv.reader(f, dialect='excel')
-        fields_name = next(reader)
+        next(reader)
         for row in reader:
-            save_model(model, row, fields_name)
+            save_model(model, row)
 
 
 class Command(BaseCommand):
