@@ -24,7 +24,6 @@ def save_model(model, row):
 
 def process_file(csv_file, model):
     path = os.path.join(BASE_DIR, f'data/{csv_file}')
-    fields_name = []
     with open(path, 'rt', encoding="utf8") as f:
         reader = csv.reader(f, dialect='excel')
         next(reader)
