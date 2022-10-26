@@ -60,8 +60,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             sudo docker-compose stop
-            sudo docker container rm ${{ secrets.DOCKER_USERNAME }}_backend_1
-            sudo docker image rm ${{ secrets.DOCKER_USERNAME }}/foodgram-backend
+            sudo docker container rm macass_backend_1
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
             rm .env
             touch .env
             echo SECRET_KEY="${{ secrets.SECRET_KEY }}" >> .env
